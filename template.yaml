@@ -1,14 +1,14 @@
 apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
-  name: nodejs-with-options-v1beta3
-  title: "Node.js App — With Branch & Visibility (v1beta3)"
-  description: Full control — choose repo name, description, owner, default branch, and visibility.
+  name: nodejs-with-metadata-v1beta3
+  title: "Node.js App — With Description & Owner (v1beta3)"
+  description: Creates a Node.js app with extra metadata fields — description and owner team.
   tags:
     - nodejs
     - github
     - v1beta3
-    - advanced
+    - metadata
 spec:
   owner: user:guest
   type: service
@@ -40,43 +40,12 @@ spec:
         owner:
           title: Owner Team
           type: string
-          description: Who owns this service?
+          description: Who owns this service? (e.g. team-alpha)
           ui:field: OwnerPicker
           ui:options:
             allowedKinds:
               - Group
               - User
-
-    - title: Repository Options
-      required:
-        - defaultBranch
-        - repoVisibility
-      properties:
-        defaultBranch:
-          title: Default Branch Name
-          type: string
-          description: Name of the default branch
-          default: main
-          enum:
-            - main
-            - master
-            - develop
-          enumNames:
-            - "main (recommended)"
-            - "master (legacy)"
-            - "develop"
-
-        repoVisibility:
-          title: Repository Visibility
-          type: string
-          description: Should this repo be public or private?
-          default: public
-          enum:
-            - public
-            - private
-          enumNames:
-            - "Public — anyone can see it"
-            - "Private — only your team"
 
   # ─── Steps ─────────────────────────────────────────────────────────────────
   steps:
@@ -89,8 +58,6 @@ spec:
           name: ${{ parameters.name }}
           description: ${{ parameters.description }}
           owner: ${{ parameters.owner }}
-          defaultBranch: ${{ parameters.defaultBranch }}
-          repoVisibility: ${{ parameters.repoVisibility }}
 
     - id: publish
       name: Publish to GitHub
@@ -100,8 +67,8 @@ spec:
           - github.com
         description: ${{ parameters.description }}
         repoUrl: github.com?owner=Akki710&repo=${{ parameters.name }}
-        defaultBranch: ${{ parameters.defaultBranch }}
-        repoVisibility: ${{ parameters.repoVisibility }}
+        defaultBranch: main
+        repoVisibility: public
 
     - id: register
       name: Register in Catalog
