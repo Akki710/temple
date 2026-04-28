@@ -1,0 +1,120 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: nodejs-with-options-v1beta3
+  title: "Node.js App — With Branch & Visibility (v1beta3)"
+  description: Full control — choose repo name, description, owner, default branch, and visibility.
+  tags:
+    - nodejs
+    - github
+    - v1beta3
+    - advanced
+spec:
+  owner: user:guest
+  type: service
+
+  # ─── Parameters ────────────────────────────────────────────────────────────
+  parameters:
+    - title: Project Details
+      required:
+        - name
+        - description
+      properties:
+        name:
+          title: Repository Name
+          type: string
+          description: Name of the GitHub repo that will be created
+          ui:autofocus: true
+          ui:placeholder: my-nodejs-app
+
+        description:
+          title: Project Description
+          type: string
+          description: Short description of what this service does
+          ui:placeholder: "A service that does something awesome"
+
+    - title: Ownership
+      required:
+        - owner
+      properties:
+        owner:
+          title: Owner Team
+          type: string
+          description: Who owns this service?
+          ui:field: OwnerPicker
+          ui:options:
+            allowedKinds:
+              - Group
+              - User
+
+    - title: Repository Options
+      required:
+        - defaultBranch
+        - repoVisibility
+      properties:
+        defaultBranch:
+          title: Default Branch Name
+          type: string
+          description: Name of the default branch
+          default: main
+          enum:
+            - main
+            - master
+            - develop
+          enumNames:
+            - "main (recommended)"
+            - "master (legacy)"
+            - "develop"
+
+        repoVisibility:
+          title: Repository Visibility
+          type: string
+          description: Should this repo be public or private?
+          default: public
+          enum:
+            - public
+            - private
+          enumNames:
+            - "Public — anyone can see it"
+            - "Private — only your team"
+
+  # ─── Steps ─────────────────────────────────────────────────────────────────
+  steps:
+    - id: fetch-template
+      name: Fetch Skeleton
+      action: fetch:template
+      input:
+        url: ./skeleton
+        values:
+          name: ${{ parameters.name }}
+          description: ${{ parameters.description }}
+          owner: ${{ parameters.owner }}
+          defaultBranch: ${{ parameters.defaultBranch }}
+          repoVisibility: ${{ parameters.repoVisibility }}
+
+    - id: publish
+      name: Publish to GitHub
+      action: publish:github
+      input:
+        allowedHosts:
+          - github.com
+        description: ${{ parameters.description }}
+        repoUrl: github.com?owner=Akki710&repo=${{ parameters.name }}
+        defaultBranch: ${{ parameters.defaultBranch }}
+        repoVisibility: ${{ parameters.repoVisibility }}
+
+    - id: register
+      name: Register in Catalog
+      action: catalog:register
+      input:
+        repoContentsUrl: ${{ steps.publish.output.repoContentsUrl }}
+        catalogInfoPath: /catalog-info.yaml
+
+  # ─── Output ────────────────────────────────────────────────────────────────
+  output:
+    links:
+      - title: GitHub Repository
+        url: ${{ steps.publish.output.remoteUrl }}
+      - title: Open in Catalog
+        icon: catalog
+        entityRef: ${{ steps.register.output.entityRef }}
