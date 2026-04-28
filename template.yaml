@@ -1,0 +1,64 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: nodejs-basic-v1beta3
+  title: "Node.js App — Basic (v1beta3)"
+  description: Creates a simple Node.js app with an index.js file and publishes it to GitHub.
+  tags:
+    - nodejs
+    - github
+    - v1beta3
+    - basic
+spec:
+  owner: user:guest
+  type: service
+
+  # ─── Parameters ────────────────────────────────────────────────────────────
+  parameters:
+    - title: Project Details
+      required:
+        - name
+      properties:
+        name:
+          title: Repository Name
+          type: string
+          description: Name of the GitHub repo that will be created
+          ui:autofocus: true
+          ui:placeholder: my-nodejs-app
+
+  # ─── Steps ─────────────────────────────────────────────────────────────────
+  steps:
+    - id: fetch-template
+      name: Fetch Skeleton
+      action: fetch:template
+      input:
+        url: ./skeleton
+        values:
+          name: ${{ parameters.name }}
+
+    - id: publish
+      name: Publish to GitHub
+      action: publish:github
+      input:
+        allowedHosts:
+          - github.com
+        description: "Node.js app: ${{ parameters.name }}"
+        repoUrl: github.com?owner=Akki710&repo=${{ parameters.name }}
+        defaultBranch: main
+        repoVisibility: public
+
+    - id: register
+      name: Register in Catalog
+      action: catalog:register
+      input:
+        repoContentsUrl: ${{ steps.publish.output.repoContentsUrl }}
+        catalogInfoPath: /catalog-info.yaml
+
+  # ─── Output ────────────────────────────────────────────────────────────────
+  output:
+    links:
+      - title: GitHub Repository
+        url: ${{ steps.publish.output.remoteUrl }}
+      - title: Open in Catalog
+        icon: catalog
+        entityRef: ${{ steps.register.output.entityRef }}
